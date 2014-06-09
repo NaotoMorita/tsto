@@ -59,7 +59,7 @@ Tmc = input("input Tmc ");
 
 
 
-hin =200 %73; %input("inlet hight:")
+hin =3660 %73; %input("inlet hight:")
 p0 = 5531;
 n_div =10000;
 %k=0.985
@@ -202,7 +202,7 @@ dlmwrite("pminlet.txt",[[0;xs;x_nose;x_out],[0;ys;y_nose;y_out]],delimiter = " "
 
 %推力計算
 
-[F Isp] = scram_thrust(MCR,TPR,p_pin,Tmc,Min,216,5531,0.088,max(y_nose)/1000*2.02,ys/1000*2.02,3.66*2.02)
+[F Isp] = scram_thrust(MCR,TPR,p_pin,Tmc,M_mainflow,216,5531,0.088,max(y_nose)/1000*2.02,ys/1000*2.02,3.66*2.02)
 		
 
 %------他設計点解析

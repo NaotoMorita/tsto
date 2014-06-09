@@ -1,6 +1,6 @@
 %PMinletを多角形化し、性能比較するコード
 %多角形化数
-n_pol = 4
+n_pol = 2
 
 clear x_pol y_pol M_pol beta_pol p02_p01_pol p2p1_pol pan_angle
 
@@ -70,3 +70,5 @@ axis 'equal'
 hold on
 plot(x_pol,y_pol)
 hold off
+
+[F Isp] = scram_thrust(MCR,TPR_pol,p_pin_pol,Tmc,M_mainflow,216,5531,0.088,max(y_nose)/1000*2.02,ys/1000*2.02,3.66*2.02)
