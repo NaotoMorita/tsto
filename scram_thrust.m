@@ -1,4 +1,4 @@
-function [F,Isp,Gfmb] = scram_thrust(MCR,TPR,pio_pin,Tmc,Min,Tin,p0,rhoin,Aii,Aio,Ano)
+function [F,Isp,Gfmb] = scram_thrust(MCR,TPR,pio_pin,Tmc,Min,Tin,p0,rhoin,Aii,Aio,Anomax,inlsolve)
 
 	%---------------------------------------------------------インテーク
 
@@ -12,7 +12,15 @@ function [F,Isp,Gfmb] = scram_thrust(MCR,TPR,pio_pin,Tmc,Min,Tin,p0,rhoin,Aii,Ai
 	P0in=p0*(1+(kappa-1)/2*Min^2)^((kappa)/(kappa-1));
 	T0in = Tin*(1+(kappa-1)/2*Min^2);
 
-
+	%ソルブモード指定
+	if inlsolve == 1
+		printf("solve MCR\n")
+		MCR=fsolve(@(MCR)inlet_solve(MCR,TPR,pio_pin,Aio,Vin,Aii,rhoin,P0in,p0,T0in,kappa,Ra),1)
+	elseif inlsolve == 2
+		printf("solve p_pin\n")
+		pio_pin=fsolve(@(pio_pin)inlet_solve(MCR,TPR,pio_pin,Aio,Vin,Aii,rhoin,P0in,p0,T0in,kappa,Ra),1)
+	end
+	MCR
 	%質量流量
 	Gio = rhoin*Vin*Aii*MCR;
 	%インテーク出口全圧
@@ -25,9 +33,9 @@ function [F,Isp,Gfmb] = scram_thrust(MCR,TPR,pio_pin,Tmc,Min,Tin,p0,rhoin,Aii,Ai
 	%インテーク出口マッハ数
 	Mio = fsolve(@(M)P0M_solve(P0io,pio,M),2.5)
 	%インテーク出口温度
-	Tio = T0in/(1+(kappa-1)/2*Mio^2);
+	Tio = T0in/(1+(kappa-1)/2*Mio^2)
 	%インテーク出口密度
-	rhoio = pio/Ra/Tio;
+	rhoio = pio/Ra/Tio
 	%インテーク出口速度
 	Vio = Mio*sqrt(kappa*pio/rhoio)
 	Vio2 = Mio*sqrt(kappa*Ra*Tio)
@@ -100,7 +108,7 @@ function [F,Isp,Gfmb] = scram_thrust(MCR,TPR,pio_pin,Tmc,Min,Tin,p0,rhoin,Aii,Ai
 
 	
 	%燃焼温度
-	f = fsolve(@(f)solve_combuster(f,Gio,Tio,Air_ent,H2_ent,Tmc),71)
+	f = fsolve(@(f)solve_combuster(f,Gio,Tio,Air_ent,H2_ent,Tmc,Aio,rhoio,Vio,T0in,pio,Ra),71)
 	if Tmc >= 2599.9
 		printf("\n\nwarning!! Tmc over 2600K  outer of entalpy list \n\n\n")
 	end
@@ -129,19 +137,19 @@ function [F,Isp,Gfmb] = scram_thrust(MCR,TPR,pio_pin,Tmc,Min,Tin,p0,rhoin,Aii,Ai
 	Imbo = Gamb*interp1(Air_ent(:,1),Air_ent(:,2),Tmc) +  Gfmb*interp1(H2_ent(:,1),H2_ent(:,2),Tmc)
 
 
-	Rmc = (Ra *f+Rf)/(1+f);
-	kappa_mc = hinetu_calc(f);
+	Rmc = (Ra *f+Rf)/(1+f)
+	kappa_mc =hinetu_calc(f)
 
 	%燃焼機音速
 	cmb=sqrt(Tmc*kappa_mc*Rmc);
 	%燃焼後密度
+	pio
 	rhomc = pio/Rmc/Tmc
 	%燃焼機流量
-	Gmb = Gamb+Gfmb;
+	Gio
+	Gmb = Gamb+Gfmb
 	%燃焼後速度
 	Vmc = Gmb/rhomc/Aio
-	Vio
-	Vio2 = Gmb/rhoio/Aio
 	%燃焼後マッハ数
 	Mmc = Vmc/cmb
 	
@@ -161,9 +169,14 @@ function [F,Isp,Gfmb] = scram_thrust(MCR,TPR,pio_pin,Tmc,Min,Tin,p0,rhoin,Aii,Ai
 	Mni = Mmc;
 	Ani = Aio;
 	%Ano = Aii*0.93;
+	%排出圧力が大気圧と等しくなるように膨張or圧縮する
+	Ano = fsolve(@(Ano)nozzleER_solve(Ano,Ani,Mni,pmc,p0,Tmc,cmb,kappa_mc),Anomax)
+	if Ano >= Anomax
+		Ano = Anomax
+	end
 	ER = Ano/Ani;
 	pni = pmc;
-	Tni = Tmc;
+	Tni = Tmc; 
 	cni = cmb;
 
 	Mno = fsolve(@(Mno)nozzle_solve(ER,Mni,Mno,kappa_mc),4);
@@ -179,7 +192,8 @@ function [F,Isp,Gfmb] = scram_thrust(MCR,TPR,pio_pin,Tmc,Min,Tin,p0,rhoin,Aii,Ai
 
 	F = Gmb * (Vno-Vin) + (pno-p0)*Ano - 1/2*rhoin*Vin^2*Aii*Cf;
 	printf("F(tonf)=%.3f\n",F/9.8/1000);
-	Isp = F/9.8/Gfmb
+	%液体水素燃料
+	Isp = F/9.8/(Gfmb)
 	
 	fid = fopen("Engine_Spec.txt","wt");
 	fprintf(fid,"-----インテーク性能-----\n")
@@ -194,7 +208,7 @@ function [F,Isp,Gfmb] = scram_thrust(MCR,TPR,pio_pin,Tmc,Min,Tin,p0,rhoin,Aii,Ai
 	fprintf(fid,"-----燃焼機性能-----\n")
 	fprintf(fid,"空気流量 : %.3f\n",Gamb)
 	fprintf(fid,"燃料流量 : %.3f\n",Gfmb)
-	fprintf(fid," 空燃比: %.3f\n",f)
+	fprintf(fid,"空燃比: %.3f\n",f)
 	fprintf(fid,"当量比 : %.3f\n",phimb)
 	fprintf(fid,"燃焼温度 : %.3f\n",Tmc)
 	fprintf(fid,"燃焼後比熱 : %.3f\n",kappa_mc)
