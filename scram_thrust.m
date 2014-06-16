@@ -18,23 +18,21 @@ function [F,Isp,Gfmb] = scram_thrust(MCR,TPR,pio_pin,Tmc,Min,Tin,p0,rhoin,Aii,Ai
 	%インテーク出口全圧
 	P0io = P0in *TPR;
 
-	%インテーク出口速度
-	Vio = 4*(P0io-pio_pin*p0)*Aio/Gio;
-	%インテーク出口密度
-	rhoio = Gio/Vio/Aio;
-	%インテーク出口温度
 
 
 	%インテーク出口圧力
 	pio =  p0*pio_pin;
 	%インテーク出口マッハ数
-	Mio = fsolve(@(M)P0M_solve(P0io,pio,M),2.5);
+	Mio = fsolve(@(M)P0M_solve(P0io,pio,M),2.5)
 	%インテーク出口温度
 	Tio = T0in/(1+(kappa-1)/2*Mio^2);
 	%インテーク出口密度
 	rhoio = pio/Ra/Tio;
 	%インテーク出口速度
-	Vio = Mio*sqrt(kappa*pio/rhoio);
+	Vio = Mio*sqrt(kappa*pio/rhoio)
+	Vio2 = Mio*sqrt(kappa*Ra*Tio)
+	Gio
+	Aio = Gio/(Vio*rhoio)
 
 	%-----------------------------------------------------------燃焼機
 
@@ -136,8 +134,16 @@ function [F,Isp,Gfmb] = scram_thrust(MCR,TPR,pio_pin,Tmc,Min,Tin,p0,rhoin,Aii,Ai
 
 	%燃焼機音速
 	cmb=sqrt(Tmc*kappa_mc*Rmc);
-	%速度は変化無しだから
-	Mmc = Vio/cmb
+	%燃焼後密度
+	rhomc = pio/Rmc/Tmc
+	%燃焼機流量
+	Gmb = Gamb+Gfmb;
+	%燃焼後速度
+	Vmc = Gmb/rhomc/Aio
+	Vio
+	Vio2 = Gmb/rhoio/Aio
+	%燃焼後マッハ数
+	Mmc = Vmc/cmb
 	
 	if Mmc<1
 		printf("\n\nwarning!! Mmc:%.2f  ram conbustion\n\n\n",Mmc)
@@ -147,8 +153,7 @@ function [F,Isp,Gfmb] = scram_thrust(MCR,TPR,pio_pin,Tmc,Min,Tin,p0,rhoin,Aii,Ai
 	P0mb=pmc*(1+(kappa_mc-1)/2*Mmc^2)^((kappa_mc)/(kappa_mc-1));
 	T0mb = Tmc*(1+(kappa_mc-1)/2*Mmc^2);
 
-	%燃焼機流量
-	Gmb = Gamb+Gfmb;
+
 
 
 	%排気ノズル
@@ -168,7 +173,7 @@ function [F,Isp,Gfmb] = scram_thrust(MCR,TPR,pio_pin,Tmc,Min,Tin,p0,rhoin,Aii,Ai
 	Vno = Mno * cno;
 
 	%エンジン抗力係数をお求める
-	Re = 30*Vin/1.5989*10^4;
+	Re = 1*Vin/1.5989*10^4;
 	Cf = 0.472/(log10(Re)^2.58*(1+(kappa-1)/2*Min^2)^0.467);
 
 

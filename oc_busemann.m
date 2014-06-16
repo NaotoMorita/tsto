@@ -132,7 +132,7 @@ y_bo = b_el*sqrt(1-(x_bo/a_el)^2);
 phi_bo = atan(sqrt(a_el^2-x_bo^2)/x_bo)
 phi = linspace(0,phi_bo,20)';
 phi(rows(phi),:)=[];
-phi(21:35,1) = linspace(phi_bo,pi/2,15)';
+phi(20:34,1) = linspace(phi_bo,pi/2,15)';
 
 c_el = sqrt(abs(a_el.^2-b_el.^2))
 r_el = b_el.^2./(a_el+c_el.*cos(phi));
@@ -161,6 +161,7 @@ for j = 1:rows(x_el)
 		cy(j) = fsolve(@(cy)circle_solve_y(cy,x_el(j),y_el(j),psi(j),R_el(j)),-10);
 		cx(j) = (cy(j)-y_el(j))/tan(psi(j))+x_el(j);
 	end
+	cz(i) = R_el/sin(beta-delta);
 
 end
 
@@ -218,3 +219,18 @@ figure(2)
 	plot(xstt,ystt)
 	hold off
 	axis 'equal'
+	
+%衝撃波形状
+figure(4)
+for j = 1:rows(x_el)
+	plot3([cx(j),xstt(j)],[cy(j),ystt(j)],[cz(j),zstt(j)],'r')
+	plot3(-[cx(j),xstt(j)],[cy(j),ystt(j)],[cz(j),zstt(j)],'r')
+	hold on
+	plot3([x_el(j),xstt(j)],[y_el(j),ystt(j)],[0,zstt(j)])
+	plot3(-[x_el(j),xstt(j)],[y_el(j),ystt(j)],[0,zstt(j)])
+	
+end
+axis 'equal'
+view(210,45)
+grid on
+hold off

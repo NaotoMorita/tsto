@@ -1,6 +1,8 @@
 %PMinletを多角形化し、性能比較するコード
 %多角形化数
-n_pol = 2
+
+%for n_pol = 0:5
+n_pol=1000;
 
 clear x_pol y_pol M_pol beta_pol p02_p01_pol p2p1_pol pan_angle
 
@@ -38,17 +40,18 @@ betaT_pol = fsolve(@(beta)tbm_function(-atan(tan_slast),M_pol(length(M_pol)),bet
 
 TPR_pol = p02_p01_cf*p02_p01_nose*p02_p01T_pol;
 p_pin_pol = p2_p1T_pol*p2_p1_nose*p2_p1_cf;
-for i = 1:rows(n_pol+2)
-	TPR_pol *= p02_p01_pol(i);
-	p_pin_pol *= p2_p1_pol(i);
+for i = 1:n_pol+2
+	TPR_pol = TPR_pol*p02_p01_pol(i)
+	p_pin_pol = p_pin_pol*p2_p1_pol(i)
 end
 mach2_pol
 
 %以下描画
-plot(x_intake,y_intake,'r')
-hold on
-plot([x_nose,x_intake(1,1)],[y_nose,y_intake(1,1)],'k')
+%plot(x_intake,y_intake,'r')
+
+%plot([x_nose,x_intake(1,1)],[y_nose,y_intake(1,1)],'k')
 plot([x_nose,x_nose-hin],[y_nose,tan(deg2rad(aoa))*(-hin)+y_nose],'c')
+hold on
 plot([0,x_nose],[0,y_nose],'m')
 plot([0,x_sholder],[0,ht],"r")
 plot(x_sp,y_sp)
@@ -71,4 +74,11 @@ hold on
 plot(x_pol,y_pol)
 hold off
 
-[F Isp] = scram_thrust(MCR,TPR_pol,p_pin_pol,Tmc,M_mainflow,216,5531,0.088,max(y_nose)/1000*2.02,ys/1000*2.02,3.66*2.02)
+%[F Isp] = scram_thrust(MCR,TPR_pol,p_pin_pol,Tmc,M_mainflow,216,5531,0.088,max(y_nose)/1000*2.02,ys/1000*2.02,3.66*2.02)
+
+%p_pin_npol(n_pol+1) = p_pin_pol;
+%TPR_npol(n_pol+1)=TPR_pol;
+%print(strcat('pmpollize',mat2str(n_pol),'.png'),'-dpng')
+
+%end
+
